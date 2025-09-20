@@ -13,7 +13,7 @@ class RandomColorHex:
 
     def RandomHex(self):
         self.RandomHexCode=[] #Resets the color
-        Alphabet = ['A', 'B', 'C', 'D', 'E', 'F']
+        Alphabet=('A', 'B', 'C', 'D', 'E', 'F')
         for i in range(6):
             LetterOrNumber=secrets.randbelow(2) #Will decide if it will be a letter or number
             if LetterOrNumber==0:
@@ -49,11 +49,11 @@ class RandomColorHex:
         Line2=[x**3 for x in Numbers]
         
         #For a one off random color:
-        #ColorOfLine1=RCH.main()
-        #ColorOfLine2=RCH.main()
+        ColorOfLine1=RCH.main()
+        ColorOfLine2=RCH.main()
         
         #For an instance random color (to be reused later):
-        color1, color2 = RCH(), RCH()
+        color1,color2=RCH.RandomColorHex(),RCH.RandomColorHex()
         ColorOfLine1=color1.mainI()
         ColorOfLine2=color2.mainI()
         
@@ -63,6 +63,10 @@ class RandomColorHex:
         plt.legend()
         plt.show()
         """)
+
+    @staticmethod
+    def John_3_Verse_16():
+        print("For this is how God loved the world: He gave his one and only Son, so that everyone who believes in him will not perish but have eternal life.")
 
 if __name__=="__main__":
     Color=RandomColorHex()
