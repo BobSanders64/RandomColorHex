@@ -10,8 +10,62 @@ except ImportError:
 class RandomColorHex:
     def __init__(self):
         self.RandomHexCode=[] #So you can access the code later for any instance
+        self.NearWhiteMasks=['FHFHFH','FXFXFX','FHFHFX','XFHFHF','EHFHFH','HHHHHH']  #neutral, warm, cool, very light gray
+
+    def MatchesMask(self, hex6, mask):
+        """Check if a hex color matches a given mask pattern"""
+        hex6=hex6.upper().lstrip('#')
+        mask=mask.upper().lstrip('#')
+        if len(hex6)!=6 or len(mask)!=6:
+            return False
+
+        def ok(h, m):
+            if m=='X':
+                return h in '0123456789ABCDEF'
+            if m=='H':
+                return h in '89ABCDEF'
+            return h==m
+
+        return all(ok(h, m) for h, m in zip(hex6, mask))
+
+    def ChannelsClose(self, hex6, max_delta=20):
+        """Check if RGB channels are too close together (indicates grayish color)"""
+        hex6=hex6.lstrip('#')
+        r=int(hex6[0:2], 16)
+        g=int(hex6[2:4], 16)
+        b=int(hex6[4:6], 16)
+        return max(abs(r-g), abs(r-b), abs(g-b))<=max_delta
+
+    def IsNearWhite(self, hex6):
+        """Check if a color is near white using masks and channel closeness"""
+        hex6=hex6.lstrip('#')
+
+        #Check against near-white masks
+        for mask in self.NearWhiteMasks:
+            if self.MatchesMask(hex6, mask):
+                return True
+
+        #Check if it's a very light gray (high values with channels close together)
+        r=int(hex6[0:2], 16)
+        g=int(hex6[2:4], 16)
+        b=int(hex6[4:6], 16)
+        AvgBrightness=(r+g+b)/3
+
+        #If average brightness is very high and channels are close, it's near white
+        if AvgBrightness>230 and self.ChannelsClose(hex6, 25):
+            return True
+
+        return False
 
     def RandomHex(self):
+        """
+        Generates a random hexadecimal color code by creating a list of six characters,
+        each of which can either be a letter (A-F) or a number (0-9). Letters are selected
+        from a predefined alphabet, while numbers are randomly chosen within a specific range.
+
+        :return: A list of six characters that together represent a random hex color code.
+        :rtype: list[str]
+        """
         self.RandomHexCode=[] #Resets the color
         Alphabet=('A', 'B', 'C', 'D', 'E', 'F')
         for i in range(6):
@@ -22,24 +76,69 @@ class RandomColorHex:
                 Choice=secrets.choice(Alphabet)
             self.RandomHexCode.append(Choice)
 
-    def mainI(self): #Instance mode of main
+    def mainI(self,WhiteAllowed=True): #Instance mode of main
+        """
+        Generates a random hex color code, ensuring it avoids white or near-white colors
+        when specified.
+
+        The function generates a random hexadecimal color code in the format '#RRGGBB'.
+        If the `WhiteAllowed` parameter is set to `False`, it prevents generating colors
+        that are close to white by continuously regenerating codes until the condition
+        is satisfied.
+
+        :param WhiteAllowed: A boolean indicating whether white or near-white colors
+            are allowed in the generated hex code.
+        :type WhiteAllowed: bool
+        :return: A string containing the generated hex color code in the format '#RRGGBB'.
+        :rtype: str
+        """
         self.RandomHex()
+        while WhiteAllowed==False and self.IsNearWhite(''.join(self.RandomHexCode))==True:
+            self.RandomHex()
+
         self.RandomHexCode.insert(0,'#')
         return ''.join(self.RandomHexCode)
 
     @staticmethod
-    def main(): #Made for if you just wanna do a one off color
+    def main(WhiteAllowed=True): #Made for if you just wanna do a one off color
+        """
+        Generates a random hexadecimal color code. Optionally, the method ensures
+        that the generated color is not close to white, if specified.
+
+        :param WhiteAllowed: Determines whether the generated color can be near
+            white. If True, the color may be close to white. Defaults to True.
+        :type WhiteAllowed: bool
+        :return: A random hexadecimal color code as a string that may or may
+            not be near white, depending on the `WhiteAllowed` parameter.
+        :rtype: str
+        """
         RC=RandomColorHex()
         RC.RandomHex()
+        while WhiteAllowed==False and RC.IsNearWhite(''.join(RC.RandomHexCode))==True:
+            RC.RandomHex()
+
         RC.RandomHexCode.insert(0,'#')
         return ''.join(RC.RandomHexCode)
 
     @staticmethod
     def Credits():
+        """
+        Giving credit to the creator of the library.
+        """
         print("Made by Nathan Honn, randomhexman@gmail.com")
 
     @staticmethod
     def Help():
+        """
+        Provides a static method to display a detailed help guide for utilizing the library.
+
+        The help includes an example script demonstrating the usage of both one-off
+        random colors and reusable instance-based random colors for graph plotting
+        with Matplotlib.
+
+        :rtype: None
+        :return: None
+        """
         print("""
         import matplotlib.pyplot as plt
         import random_color_hex as RCH
