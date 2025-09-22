@@ -15,9 +15,25 @@ Alternatively, you can also use the instance method:
 
 ```python
 import random_color_hex as RCH
-color=RCH.RandomColorHex()  # module is not callable; use the class
+color=RCH.RandomColorHex()
 ColorOne=color.mainI()
 ```
+
+To make sure the color generated is not white (as that could be problematic):
+
+```python
+import random_color_hex as RCH
+Color=RCH.main(WhiteAllowed=False)
+````
+
+or
+
+```python
+import random_color_hex as RCH
+color=RCH.RandomColorHex(WhiteAllowed=False)
+ColorOne=color.mainI(WhiteAllowed=False)
+```
+
 
 Enjoy your daily dose of randomness!
 
@@ -31,11 +47,11 @@ pip install random-color-hex
 
 ---
 
-## Nerd notes
+## Technical notes
 
 * **Zero deps:** stdlib-only; uses `secrets` (cryptographic) with a safe fallback.
-* **OS:** works on Windows/macOS/Linux. If it can run python 3.13.2, this can be run.
-* **Python:** >=3.13.2 (pure-Python wheel).
+* **OS:** works on Windows/macOS/Linux. If it can run python 3.11.0, this can be run.
+* **Python:** >=3.11.0 (pure-Python wheel).
 * **API:**
 
   * `RCH.main()` → one-off `#RRGGBB`
