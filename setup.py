@@ -6,7 +6,7 @@ long_description=README.read_text(encoding="utf-8")
 
 setup(
     name="random_color_hex",
-    version="1.0.9",
+    version="1.1.1",
     author="Nathan Honn",
     author_email="randomhexman@gmail.com",
     description="Generate random CSS-style hex colors",
@@ -18,9 +18,9 @@ setup(
     license_files=("LICENSE.txt",),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: The Unlicense (Unlicense)",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.13.2",
+    python_requires=">=3.11.0",
 )
