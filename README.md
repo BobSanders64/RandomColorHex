@@ -19,19 +19,19 @@ color=RCH.RandomColorHex()
 ColorOne=color.mainI()
 ```
 
-To make sure the color generated is not white (as that could be problematic):
+To make sure the color generated is not a super light color close to white (as that could be problematic):
 
 ```python
 import random_color_hex as RCH
-Color=RCH.main(WhiteAllowed=False)
+Color=RCH.main(SuperLightColorsAllowed=False)
 ````
 
 or
 
 ```python
 import random_color_hex as RCH
-color=RCH.RandomColorHex(WhiteAllowed=False)
-ColorOne=color.mainI(WhiteAllowed=False)
+color=RCH.RandomColorHex(SuperLightColorsAllowed=False)
+ColorOne=color.mainI(SuperLightColorsAllowed=False)
 ```
 
 
@@ -63,6 +63,7 @@ pip install random-color-hex
 
 ## Tiny matplotlib demo
 
+Ex 1:
 ```python
 import matplotlib.pyplot as plt
 import random_color_hex as RCH
@@ -83,6 +84,35 @@ plt.plot(Numbers,Line1,color=ColorOfLine1,label="x^2")
 plt.plot(Numbers,Line2,color=ColorOfLine2,label="x^3")
 plt.plot(Numbers,Line1,color=ColorOfLine3,linestyle="--",label="x^2 (inst)")
 plt.legend(); plt.show()
+```
+
+Ex 2:
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import random_color_hex as RCH
+
+plt.figure(1)
+figs,axes=plt.subplots(20,20)
+xaxis=np.linspace(-10,10,41)
+yaxis=[x**2 for x in xaxis]
+for i in range(20):
+    for j in range(20):
+        axes[i,j].plot(xaxis,yaxis,color=RCH.main(SuperLightColorsAllowed=False))
+        axes[i,j].axis('off')
+plt.suptitle("No Light Colors Allowed")
+plt.show()
+
+plt.figure(2)
+figs,axes=plt.subplots(20,20)
+xaxis=np.linspace(-10,10,41)
+yaxis=[x**2 for x in xaxis]
+for i in range(20):
+    for j in range(20):
+        axes[i,j].plot(xaxis,yaxis,color=RCH.main())
+        axes[i,j].axis('off')
+plt.suptitle("Light Colors Allowed")
+plt.show()
 ```
 
 ---
