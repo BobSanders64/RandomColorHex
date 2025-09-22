@@ -36,7 +36,7 @@ class RandomColorHex:
         b=int(hex6[4:6], 16)
         return max(abs(r-g), abs(r-b), abs(g-b))<=max_delta
 
-    def IsNearWhite(self, hex6):
+    def IsNearWhite(self, hex6:str):
         """Check if a color is near white using masks and channel closeness"""
         hex6=hex6.lstrip('#')
 
@@ -45,14 +45,22 @@ class RandomColorHex:
             if self.MatchesMask(hex6, mask):
                 return True
 
-        #Check if it's a very light gray (high values with channels close together)
         r=int(hex6[0:2], 16)
         g=int(hex6[2:4], 16)
         b=int(hex6[4:6], 16)
-        AvgBrightness=(r+g+b)/3
 
-        #If average brightness is very high and channels are close, it's near white
-        if AvgBrightness>230 and self.ChannelsClose(hex6, 25):
+        #If the MINIMUM channel is high, it's a light/pastel color
+        #(e.g., light pink has high R,G,B with R slightly higher)
+        if min(r, g, b) > 180:
+            return True
+
+        #Check average brightness for overall light colors
+        avg_brightness=(r+g+b)/3
+        if avg_brightness>200:
+            return True
+
+        #Check if it's a light gray (medium-high values with channels close)
+        if avg_brightness>150 and self.ChannelsClose(hex6, 20):
             return True
 
         return False
@@ -76,45 +84,45 @@ class RandomColorHex:
                 Choice=secrets.choice(Alphabet)
             self.RandomHexCode.append(Choice)
 
-    def mainI(self,WhiteAllowed=True): #Instance mode of main
+    def mainI(self, SuperLightColorsAllowed=True): #Instance mode of main
         """
         Generates a random hex color code, ensuring it avoids white or near-white colors
         when specified.
 
         The function generates a random hexadecimal color code in the format '#RRGGBB'.
-        If the `WhiteAllowed` parameter is set to `False`, it prevents generating colors
+        If the `SuperLightColorsAllowed` parameter is set to `False`, it prevents generating colors
         that are close to white by continuously regenerating codes until the condition
         is satisfied.
 
-        :param WhiteAllowed: A boolean indicating whether white or near-white colors
+        :param SuperLightColorsAllowed: A boolean indicating whether white or near-white colors
             are allowed in the generated hex code.
-        :type WhiteAllowed: bool
+        :type SuperLightColorsAllowed: bool
         :return: A string containing the generated hex color code in the format '#RRGGBB'.
         :rtype: str
         """
         self.RandomHex()
-        while WhiteAllowed==False and self.IsNearWhite(''.join(self.RandomHexCode))==True:
+        while SuperLightColorsAllowed==False and self.IsNearWhite(''.join(self.RandomHexCode))==True:
             self.RandomHex()
 
         self.RandomHexCode.insert(0,'#')
         return ''.join(self.RandomHexCode)
 
     @staticmethod
-    def main(WhiteAllowed=True): #Made for if you just wanna do a one off color
+    def main(SuperLightColorsAllowed=True): #Made for if you just wanna do a one off color
         """
         Generates a random hexadecimal color code. Optionally, the method ensures
         that the generated color is not close to white, if specified.
 
-        :param WhiteAllowed: Determines whether the generated color can be near
+        :param SuperLightColorsAllowed: Determines whether the generated color can be near
             white. If True, the color may be close to white. Defaults to True.
-        :type WhiteAllowed: bool
+        :type SuperLightColorsAllowed: bool
         :return: A random hexadecimal color code as a string that may or may
-            not be near white, depending on the `WhiteAllowed` parameter.
+            not be near white, depending on the `SuperLightColorsAllowed` parameter.
         :rtype: str
         """
         RC=RandomColorHex()
         RC.RandomHex()
-        while WhiteAllowed==False and RC.IsNearWhite(''.join(RC.RandomHexCode))==True:
+        while SuperLightColorsAllowed==False and RC.IsNearWhite(''.join(RC.RandomHexCode))==True:
             RC.RandomHex()
 
         RC.RandomHexCode.insert(0,'#')
