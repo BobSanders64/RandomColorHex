@@ -1,4 +1,4 @@
-# random_color_hex
+# random_color_hex library
 
 Have you ever thought to yourself, "man, I really wish I could make this plot a random color so debugging is less boring"?
 
