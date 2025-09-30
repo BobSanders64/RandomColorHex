@@ -306,8 +306,7 @@ class RandomColorHex:
 if __name__=="__main__":
     c=RandomColorHex()
     print(c.main())
-    for i in range(770):
-        print(c.main(SuperLightColorsAllowed=False, SuperDarkColorsAllowed=False, HowDifferentShouldColorsBe='m'))
+    print(c.main(SuperLightColorsAllowed=False, SuperDarkColorsAllowed=False, HowDifferentShouldColorsBe='m'))
     print(c.BasicMain())
     c.Credits()
     c.Help()
