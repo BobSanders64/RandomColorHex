@@ -21,7 +21,8 @@ class RandomColorHex:
     * Each instance keeps the last generated hex in `self.RandomHexCode`.
     """
     AllTheColors=[]
-    CycleResetInt=0
+    EpochCount={'S':0,'M':0,'L':0,'SL':0}
+    EpochSize={'S':8400,'M':770,'L':220,'SL':36}
 
     @classmethod
     def reset(cls):
@@ -183,18 +184,9 @@ class RandomColorHex:
 
     @staticmethod
     def BasicMain(SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True):
-        """Legacy/simple color generator (stateless).
-
-        Returns a single random color '#RRGGBB'. If `SuperLightColorsAllowed`
-        is False, it rejects near-white colors until a non-light color is found.
-
-        This method does NOT enforce distance from previous colors.
-        """
-        if RandomColorHex.CycleResetInt==10:
+        if RandomColorHex.EpochCount['S']>=RandomColorHex.EpochSize['S']:
             RandomColorHex.AllTheColors.clear()
-            RandomColorHex.CycleResetInt=0
-        elif RandomColorHex.CycleResetInt%2==1:
-            RandomColorHex.AllTheColors.clear()
+            RandomColorHex.EpochCount['S']=0
         RC=RandomColorHex()
         RC.RandomHex()
         hex6=''.join(RC.RandomHexCode)
@@ -209,47 +201,24 @@ class RandomColorHex:
                 RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
         RC.RandomHexCode.insert(0,'#')
         out=''.join(RC.RandomHexCode)
-        RandomColorHex.CycleResetInt=(RandomColorHex.CycleResetInt+1)%11
+        RandomColorHex.EpochCount['S']+=1
         return out
 
     def main(self, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True,HowDifferentShouldColorsBe='s'):
-        """Preferred color generator with optional separation.
-
-        Parameters
-        ----------
-        SuperLightColorsAllowed : bool, default True
-            If False, avoids near-white and very light pastel/gray colors.
-        HowDifferentShouldColorsBe : {'S','M','L','SL'}, default 's'
-            Minimum distance from all previously returned colors:
-            'S' ~ small (10), 'M' ~ medium (25), 'L' ~ large (40), 'SL' ~ Super Large (80).
-
-        Returns
-        -------
-        str
-            A CSS hex color like '#12ABEF'.
-
-        Notes
-        -----
-        * On success, the unprefixed 'RRGGBB' is appended to `AllTheColors`.
-        * Re-generates internally until both the near-white and distance
-          constraints (if any) are satisfied.
-        """
-        if RandomColorHex.CycleResetInt==10:
-            self.AllTheColors.clear()
-            RandomColorHex.CycleResetInt=0
-        elif RandomColorHex.CycleResetInt%2==1:
-            self.AllTheColors.clear()
         match HowDifferentShouldColorsBe:
-            case 'M' | 'm':
-                MetricBar=25
-            case 'S' | 's':
-                MetricBar=10
-            case "L" | "l":
-                MetricBar=40
-            case "SL" | "sl" | "sL" | "Sl":
-                MetricBar=80
+            case 'M'|'m':
+                MetricBar=25; mode='M'
+            case 'S'|'s':
+                MetricBar=10; mode='S'
+            case "L"|"l":
+                MetricBar=40; mode='L'
+            case "SL"|"sl"|"sL"|"Sl":
+                MetricBar=80; mode='SL'
             case _:
                 raise ValueError('Invalid HowDifferentShouldColorsBe parameter! Please type "s" (small), "m" (medium), "l" (large), or "sl" (super large).')
+        if RandomColorHex.EpochCount[mode]>=RandomColorHex.EpochSize[mode]:
+            self.AllTheColors.clear()
+            RandomColorHex.EpochCount[mode]=0
         self.RandomHex()
         start=tym.time()
         OneNotice=True
@@ -268,20 +237,16 @@ class RandomColorHex:
                 OneNotice=False
             OutputtedString=''.join(self.RandomHexCode)
             if not SuperLightColorsAllowed and self.IsNearWhite(OutputtedString):
-                self.RandomHex()
-                continue
+                self.RandomHex(); continue
             if not SuperDarkColorsAllowed and self.IsNearBlack(OutputtedString):
-                self.RandomHex()
-                continue
+                self.RandomHex(); continue
             if self.AreColorsClose(OutputtedString, MetricBar):
-                self.RandomHex()
-                continue
+                self.RandomHex(); continue
             break
         self.AllTheColors.append(''.join(self.RandomHexCode))
         self.RandomHexCode.insert(0,'#')
-        out=''.join(self.RandomHexCode)
-        RandomColorHex.CycleResetInt=(RandomColorHex.CycleResetInt+1)%11
-        return out
+        RandomColorHex.EpochCount[mode]+=1
+        return ''.join(self.RandomHexCode)
 
     @staticmethod
     def Credits():
