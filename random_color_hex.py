@@ -21,6 +21,29 @@ class RandomColorHex:
     * Each instance keeps the last generated hex in `self.RandomHexCode`.
     """
     AllTheColors=[]
+    CycleResetInt=0
+
+    @classmethod
+    def reset(cls):
+        """Clear class-level state that tracks previously used colors."""
+        cls.AllTheColors.clear()
+
+    @classmethod
+    def _preflight_cycle_reset(cls):
+        """Reset rules:
+        - If CycleResetInt is odd ⇒ reset before doing anything.
+        - If CycleResetInt == 10 ⇒ reset and wrap to 0 before doing anything.
+        """
+        if cls.CycleResetInt == 10:
+            cls.reset()
+            cls.CycleResetInt = 0  # wrap
+        elif cls.CycleResetInt % 2 == 1:
+            cls.reset()
+
+    @classmethod
+    def _bump_cycle(cls):
+        """Advance 0→1→…→10→0."""
+        cls.CycleResetInt = (cls.CycleResetInt + 1) % 11
 
     def __init__(self):
         """Initialize internal buffers and near-white masks.
@@ -159,7 +182,7 @@ class RandomColorHex:
             self.RandomHexCode.append(Choice)
 
     @staticmethod
-    def BasicMain(SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True): #Instance mode of main
+    def BasicMain(SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True):
         """Legacy/simple color generator (stateless).
 
         Returns a single random color '#RRGGBB'. If `SuperLightColorsAllowed`
@@ -167,26 +190,29 @@ class RandomColorHex:
 
         This method does NOT enforce distance from previous colors.
         """
+        if RandomColorHex.CycleResetInt==10:
+            RandomColorHex.AllTheColors.clear()
+            RandomColorHex.CycleResetInt=0
+        elif RandomColorHex.CycleResetInt%2==1:
+            RandomColorHex.AllTheColors.clear()
         RC=RandomColorHex()
         RC.RandomHex()
-        hex6 = ''.join(RC.RandomHexCode)
+        hex6=''.join(RC.RandomHexCode)
         if not SuperLightColorsAllowed and not SuperDarkColorsAllowed:
-            #mid-tone only: neither near white nor near black
             while RC.IsNearWhite(hex6) or RC.IsNearBlack(hex6):
                 RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
-
         elif not SuperLightColorsAllowed:
             while RC.IsNearWhite(hex6):
                 RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
-
         elif not SuperDarkColorsAllowed:
             while RC.IsNearBlack(hex6):
                 RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
-
         RC.RandomHexCode.insert(0,'#')
-        return ''.join(RC.RandomHexCode)
+        out=''.join(RC.RandomHexCode)
+        RandomColorHex.CycleResetInt=(RandomColorHex.CycleResetInt+1)%11
+        return out
 
-    def main(self, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True,HowDifferentShouldColorsBe='s'): #Made for if you just wanna do a one off color
+    def main(self, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True,HowDifferentShouldColorsBe='s'):
         """Preferred color generator with optional separation.
 
         Parameters
@@ -208,6 +234,11 @@ class RandomColorHex:
         * Re-generates internally until both the near-white and distance
           constraints (if any) are satisfied.
         """
+        if RandomColorHex.CycleResetInt==10:
+            self.AllTheColors.clear()
+            RandomColorHex.CycleResetInt=0
+        elif RandomColorHex.CycleResetInt%2==1:
+            self.AllTheColors.clear()
         match HowDifferentShouldColorsBe:
             case 'M' | 'm':
                 MetricBar=25
@@ -219,7 +250,6 @@ class RandomColorHex:
                 MetricBar=80
             case _:
                 raise ValueError('Invalid HowDifferentShouldColorsBe parameter! Please type "s" (small), "m" (medium), "l" (large), or "sl" (super large).')
-
         self.RandomHex()
         start=tym.time()
         OneNotice=True
@@ -237,28 +267,21 @@ class RandomColorHex:
                 )
                 OneNotice=False
             OutputtedString=''.join(self.RandomHexCode)
-
-            #Check if it's near white (if not allowed)
             if not SuperLightColorsAllowed and self.IsNearWhite(OutputtedString):
                 self.RandomHex()
                 continue
-
-            #Check if it's too close to black (if its not allowed)
             if not SuperDarkColorsAllowed and self.IsNearBlack(OutputtedString):
                 self.RandomHex()
                 continue
-
-            #Check if it's too close to existing colors
             if self.AreColorsClose(OutputtedString, MetricBar):
                 self.RandomHex()
                 continue
-
-            #Valid color found
             break
-
         self.AllTheColors.append(''.join(self.RandomHexCode))
         self.RandomHexCode.insert(0,'#')
-        return ''.join(self.RandomHexCode)
+        out=''.join(self.RandomHexCode)
+        RandomColorHex.CycleResetInt=(RandomColorHex.CycleResetInt+1)%11
+        return out
 
     @staticmethod
     def Credits():
