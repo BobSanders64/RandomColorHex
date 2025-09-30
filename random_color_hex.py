@@ -2,18 +2,49 @@
 Will output a random hex code, CSS style 6 digit "RRGGBB" format.
 '''
 
-try:
-    import secrets
-except ImportError:
-    import random as secrets
+import secrets
+import time as tym
 
 class RandomColorHex:
+    """Stateful random color generator.
+
+    This class can repeatedly generate readable hex colors while:
+    - optionally avoiding white and near-white/pastel tones, and
+    - ensuring successive colors from the SAME instance are separated
+      by a minimum RGB distance.
+
+    Notes
+    -----
+    * `AllTheColors` is a class-level list of colors previously yielded
+      by any instance; it is used to avoid generating a color too close
+      to an existing one.
+    * Each instance keeps the last generated hex in `self.RandomHexCode`.
+    """
+    AllTheColors=[]
+
     def __init__(self):
+        """Initialize internal buffers and near-white masks.
+
+        Sets:
+          - `self.RandomHexCode` (list[str]): last generated 'RRGGBB' (no '#').
+          - `self.NearWhiteMasks` (list[str]): patterns like 'FHFHFH', where:
+              'X' = any hex digit 0–F,
+              'H' = high hex digit 8–F,
+              other letters = exact nibble match.
+        """
         self.RandomHexCode=[] #So you can access the code later for any instance
         self.NearWhiteMasks=['FHFHFH','FXFXFX','FHFHFX','XFHFHF','EHFHFH','HHHHHH']  #neutral, warm, cool, very light gray
 
     def MatchesMask(self, hex6, mask):
-        """Check if a hex color matches a given mask pattern"""
+        """Return True if the 6-char hex string matches a mask.
+
+        Mask semantics:
+          - 'X' → any hex digit (0–F).
+          - 'H' → high nibble (8–F).
+          - other hex characters → must match exactly.
+
+        Both inputs may include or omit the leading '#'.
+        """
         hex6=hex6.upper().lstrip('#')
         mask=mask.upper().lstrip('#')
         if len(hex6)!=6 or len(mask)!=6:
@@ -28,16 +59,47 @@ class RandomColorHex:
 
         return all(ok(h, m) for h, m in zip(hex6, mask))
 
-    def ChannelsClose(self, hex6, max_delta=20):
-        """Check if RGB channels are too close together (indicates grayish color)"""
+    def ChannelsClose(self, hex6, max_delta=20)->bool:
+        """Heuristic for “grayish”: True if RGB channels are very similar.
+
+        Computes max(|R−G|, |R−B|, |G−B|) and compares to `max_delta`.
+        Use this to detect low-saturation, gray-like colors.
+        """
         hex6=hex6.lstrip('#')
         r=int(hex6[0:2], 16)
         g=int(hex6[2:4], 16)
         b=int(hex6[4:6], 16)
         return max(abs(r-g), abs(r-b), abs(g-b))<=max_delta
 
+    def AreColorsClose(self, InputColor, MetricBar):
+        """Return True if `InputColor` is within `MetricBar` of any prior color.
+
+        Uses Euclidean distance in RGB space between the candidate color and
+        all entries in `self.AllTheColors`. If any distance ≤ `MetricBar`, the
+        color is considered “too close”.
+        """
+        R1=int(InputColor[0:2],16)
+        G1=int(InputColor[2:4],16)
+        B1=int(InputColor[4:6],16)
+        for prev in self.AllTheColors:
+            R2=int(prev[0:2],16)
+            G2=int(prev[2:4],16)
+            B2=int(prev[4:6],16)
+            #Euclidean distance in RGB
+            d=((R1-R2)**2+(G1-G2)**2+(B1-B2)**2)**0.5
+            if d<=MetricBar:
+                return True
+        return False
+
     def IsNearWhite(self, hex6:str):
-        """Check if a color is near white using masks and channel closeness"""
+        """Return True if the color is near white / very light.
+
+        Checks a combination of:
+          * near-white mask matches (e.g., 'FHFHFH'),
+          * minimum channel threshold (pastel-like if min(R,G,B) > 180),
+          * high average brightness,
+          * light gray detection via `ChannelsClose(...)`.
+        """
         hex6=hex6.lstrip('#')
 
         #Check against near-white masks
@@ -51,7 +113,7 @@ class RandomColorHex:
 
         #If the MINIMUM channel is high, it's a light/pastel color
         #(e.g., light pink has high R,G,B with R slightly higher)
-        if min(r, g, b) > 180:
+        if min(r,g,b)>180:
             return True
 
         #Check average brightness for overall light colors
@@ -65,18 +127,30 @@ class RandomColorHex:
 
         return False
 
-    def RandomHex(self):
-        """
-        Generates a random hexadecimal color code by creating a list of six characters,
-        each of which can either be a letter (A-F) or a number (0-9). Letters are selected
-        from a predefined alphabet, while numbers are randomly chosen within a specific range.
+    def IsNearBlack(self, hex6: str) -> bool:
+        """Return True if the color is very dark/near black."""
+        hex6=hex6.lstrip('#')
+        r=int(hex6[0:2], 16)
+        g=int(hex6[2:4], 16)
+        b=int(hex6[4:6], 16)
+        avg=(r+g+b)/3
+        if max(r, g, b)<40:
+            return True
+        if avg<35:
+            return True
+        if avg<70 and self.ChannelsClose(hex6, 15):
+            return True
+        return False
 
-        :return: A list of six characters that together represent a random hex color code.
-        :rtype: list[str]
+    def RandomHex(self):
+        """Generate a fresh 6-digit hex (no '#') into `self.RandomHexCode`.
+
+        The result is a list of six characters chosen from 0–9 and A–F.
+        Callers typically join the list and prepend '#'.
         """
         self.RandomHexCode=[] #Resets the color
         Alphabet=('A', 'B', 'C', 'D', 'E', 'F')
-        for i in range(6):
+        for _ in range(6):
             LetterOrNumber=secrets.randbelow(2) #Will decide if it will be a letter or number
             if LetterOrNumber==0:
                 Choice=str(secrets.randbelow(10))
@@ -84,49 +158,107 @@ class RandomColorHex:
                 Choice=secrets.choice(Alphabet)
             self.RandomHexCode.append(Choice)
 
-    def mainI(self, SuperLightColorsAllowed=True): #Instance mode of main
-        """
-        Generates a random hex color code, ensuring it avoids white or near-white colors
-        when specified.
-
-        The function generates a random hexadecimal color code in the format '#RRGGBB'.
-        If the `SuperLightColorsAllowed` parameter is set to `False`, it prevents generating colors
-        that are close to white by continuously regenerating codes until the condition
-        is satisfied.
-
-        :param SuperLightColorsAllowed: A boolean indicating whether white or near-white colors
-            are allowed in the generated hex code.
-        :type SuperLightColorsAllowed: bool
-        :return: A string containing the generated hex color code in the format '#RRGGBB'.
-        :rtype: str
-        """
-        self.RandomHex()
-        while SuperLightColorsAllowed==False and self.IsNearWhite(''.join(self.RandomHexCode))==True:
-            self.RandomHex()
-
-        self.RandomHexCode.insert(0,'#')
-        return ''.join(self.RandomHexCode)
-
     @staticmethod
-    def main(SuperLightColorsAllowed=True): #Made for if you just wanna do a one off color
-        """
-        Generates a random hexadecimal color code. Optionally, the method ensures
-        that the generated color is not close to white, if specified.
+    def BasicMain(SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True): #Instance mode of main
+        """Legacy/simple color generator (stateless).
 
-        :param SuperLightColorsAllowed: Determines whether the generated color can be near
-            white. If True, the color may be close to white. Defaults to True.
-        :type SuperLightColorsAllowed: bool
-        :return: A random hexadecimal color code as a string that may or may
-            not be near white, depending on the `SuperLightColorsAllowed` parameter.
-        :rtype: str
+        Returns a single random color '#RRGGBB'. If `SuperLightColorsAllowed`
+        is False, it rejects near-white colors until a non-light color is found.
+
+        This method does NOT enforce distance from previous colors.
         """
         RC=RandomColorHex()
         RC.RandomHex()
-        while SuperLightColorsAllowed==False and RC.IsNearWhite(''.join(RC.RandomHexCode))==True:
-            RC.RandomHex()
+        hex6 = ''.join(RC.RandomHexCode)
+        if not SuperLightColorsAllowed and not SuperDarkColorsAllowed:
+            #mid-tone only: neither near white nor near black
+            while RC.IsNearWhite(hex6) or RC.IsNearBlack(hex6):
+                RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
+
+        elif not SuperLightColorsAllowed:
+            while RC.IsNearWhite(hex6):
+                RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
+
+        elif not SuperDarkColorsAllowed:
+            while RC.IsNearBlack(hex6):
+                RC.RandomHex(); hex6=''.join(RC.RandomHexCode)
 
         RC.RandomHexCode.insert(0,'#')
         return ''.join(RC.RandomHexCode)
+
+    def main(self, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True,HowDifferentShouldColorsBe='s'): #Made for if you just wanna do a one off color
+        """Preferred color generator with optional separation.
+
+        Parameters
+        ----------
+        SuperLightColorsAllowed : bool, default True
+            If False, avoids near-white and very light pastel/gray colors.
+        HowDifferentShouldColorsBe : {'S','M','L','SL'}, default 's'
+            Minimum distance from all previously returned colors:
+            'S' ~ small (10), 'M' ~ medium (25), 'L' ~ large (40), 'SL' ~ Super Large (80).
+
+        Returns
+        -------
+        str
+            A CSS hex color like '#12ABEF'.
+
+        Notes
+        -----
+        * On success, the unprefixed 'RRGGBB' is appended to `AllTheColors`.
+        * Re-generates internally until both the near-white and distance
+          constraints (if any) are satisfied.
+        """
+        match HowDifferentShouldColorsBe:
+            case 'M' | 'm':
+                MetricBar=25
+            case 'S' | 's':
+                MetricBar=10
+            case "L" | "l":
+                MetricBar=40
+            case "SL" | "sl" | "sL" | "Sl":
+                MetricBar=80
+            case _:
+                raise ValueError('Invalid HowDifferentShouldColorsBe parameter! Please type "s" (small), "m" (medium), "l" (large), or "sl" (super large).')
+
+        self.RandomHex()
+        start=tym.time()
+        OneNotice=True
+        while True:
+            if OneNotice and (tym.time()-start)>=40:
+                print(
+                    "Note! It seems you're generating a lot of colors. The algorithm will keep searching, "
+                    "but it's going to take a while!\n"
+                    "This may be because the distance metric is too large (HowDifferentShouldColorsBe).\n"
+                    "Generally, anything over 220 colors with L set up starts having trouble.\n"
+                    "Super Large starts having trouble at 36\n"
+                    "Small can do ~8400\n"
+                    "Medium can do ~770\n"
+                    "For quicker results, please use either BasicMain() or HowDifferentShouldColorsBe='S' or 'M'."
+                )
+                OneNotice=False
+            OutputtedString=''.join(self.RandomHexCode)
+
+            #Check if it's near white (if not allowed)
+            if not SuperLightColorsAllowed and self.IsNearWhite(OutputtedString):
+                self.RandomHex()
+                continue
+
+            #Check if it's too close to black (if its not allowed)
+            if not SuperDarkColorsAllowed and self.IsNearBlack(OutputtedString):
+                self.RandomHex()
+                continue
+
+            #Check if it's too close to existing colors
+            if self.AreColorsClose(OutputtedString, MetricBar):
+                self.RandomHex()
+                continue
+
+            #Valid color found
+            break
+
+        self.AllTheColors.append(''.join(self.RandomHexCode))
+        self.RandomHexCode.insert(0,'#')
+        return ''.join(self.RandomHexCode)
 
     @staticmethod
     def Credits():
@@ -137,15 +269,12 @@ class RandomColorHex:
 
     @staticmethod
     def Help():
-        """
-        Provides a static method to display a detailed help guide for utilizing the library.
+        """Print a short usage example demonstrating both entry points.
 
-        The help includes an example script demonstrating the usage of both one-off
-        random colors and reusable instance-based random colors for graph plotting
-        with Matplotlib.
-
-        :rtype: None
-        :return: None
+        Shows:
+          * one-off generation with `BasicMain()`, and
+          * instance-based generation with `.main()` that encourages
+            color separation for successive lines/series.
         """
         print("""
         import matplotlib.pyplot as plt
@@ -156,13 +285,12 @@ class RandomColorHex:
         Line2=[x**3 for x in Numbers]
         
         #For a one off random color:
+        ColorOfLine1=RCH.BasicMain()
+        ColorOfLine2=RCH.BasicMain()
+        
+        #For the main feature of the library, use the normal main() method:
         ColorOfLine1=RCH.main()
         ColorOfLine2=RCH.main()
-        
-        #For an instance random color (to be reused later):
-        color1,color2=RCH.RandomColorHex(),RCH.RandomColorHex()
-        ColorOfLine1=color1.mainI()
-        ColorOfLine2=color2.mainI()
         
         plt.plot(Numbers,Line1,color=ColorOfLine1,label="x²")
         plt.plot(Numbers,Line2,color=ColorOfLine2,label="x³")
@@ -176,9 +304,10 @@ class RandomColorHex:
         print("For this is how God loved the world: He gave his one and only Son, so that everyone who believes in him will not perish but have eternal life.")
 
 if __name__=="__main__":
-    Color=RandomColorHex()
-    Answer=Color.mainI()
-    print(f"Your random hex code is: {Answer}")
-    print(f"Your random hex code (static version) is: {RandomColorHex.main()}")
-    Color.Credits()
-    Color.Help()
+    c=RandomColorHex()
+    print(c.main())
+    for i in range(770):
+        print(c.main(SuperLightColorsAllowed=False, SuperDarkColorsAllowed=False, HowDifferentShouldColorsBe='m'))
+    print(c.BasicMain())
+    c.Credits()
+    c.Help()
