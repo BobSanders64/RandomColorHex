@@ -1,11 +1,19 @@
 from .random_color_hex import RandomColorHex
 
-__version__="1.1.2"
+__version__="2.0"
 __author__="Nathan Honn"
 __email__="randomhexman@gmail.com"
-__all__=["RandomColorHex", "main"]
 
-main=RandomColorHex.main
-Credits=RandomColorHex.Credits
-Help=RandomColorHex.Help
+__all__=["RandomColorHex", "main", "BasicMain", "Credits", "Help"]
 
+def main(*, SuperLightColorsAllowed=True, HowDifferentShouldColorsBe='s'):
+    return RandomColorHex().main(SuperLightColorsAllowed=SuperLightColorsAllowed, HowDifferentShouldColorsBe=HowDifferentShouldColorsBe)
+
+def BasicMain(*, SuperLightColorsAllowed=True):
+    return RandomColorHex().BasicMain(SuperLightColorsAllowed=SuperLightColorsAllowed)
+
+def Credits():
+    return RandomColorHex.Credits()
+
+def Help():
+    return RandomColorHex.Help()
