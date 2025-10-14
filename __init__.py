@@ -1,6 +1,6 @@
 from .random_color_hex import RandomColorHex
 
-__version__="2.1.5"
+__version__="2.1.6"
 __author__="Nathan Honn"
 __email__="randomhexman@gmail.com"
 
@@ -13,11 +13,13 @@ def BasicMain(*, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True):
     return RandomColorHex().BasicMain(SuperLightColorsAllowed=SuperLightColorsAllowed, SuperDarkColorsAllowed=SuperDarkColorsAllowed)
 
 def Credits():
-    return RandomColorHex.Credits()
+    """Return package credits/about string."""
+    return RandomColorHex().Credits()
 
 def Help():
-    return RandomColorHex.Help()
+    """Return help/usage string."""
+    return RandomColorHex().Help()
 
-
-
-
+def JupyterReset():
+    """Manual call, must use if your in Jupyter notebook"""
+    return RandomColorHex()._reset()
