@@ -26,6 +26,7 @@ class RandomColorHex:
     EpochCount={'S':0,'M':0,'L':0,'SL':0}
     EpochSize={'S':663,'M':68,'L':40,'SL':23}
     _auto_reset_registered=False
+    MassProduction = False
 
     @classmethod
     def _reset(cls):
@@ -39,6 +40,7 @@ class RandomColorHex:
         if not cls._auto_reset_registered:
             atexit.register(cls._reset)
             cls._auto_reset_registered=True
+            MassProduction = False
 
     def __init__(self):
         """Initialize internal buffers and near-white masks.
@@ -53,7 +55,6 @@ class RandomColorHex:
         self.RandomHexCode=[] #So you can access the code later for any instance
         self.NearWhiteMasks=['FHFHFH','FXFXFX','FHFHFX','XFHFHF','EHFHFH','HHHHHH']  #neutral, warm, cool, very light gray
         self._register_auto_reset()
-        self.MassProduction=False
 
     def MatchesMask(self, hex6, mask):
         """Return True if the 6-char hex string matches a mask.
