@@ -5,7 +5,10 @@ Will output a random hex code, CSS style 6 digit "RRGGBB" format.
 import secrets
 import time as tym
 import atexit
-from .ColorCalculus import DeepColorMath
+try:
+    from .ColorCalculus import DeepColorMath
+except (ImportError, ValueError):
+    from ColorCalculus import DeepColorMath
 
 class RandomColorHex:
     """Stateful random color generator.
@@ -40,7 +43,7 @@ class RandomColorHex:
         if not cls._auto_reset_registered:
             atexit.register(cls._reset)
             cls._auto_reset_registered=True
-            MassProduction = False
+            cls.MassProduction = False
 
     def __init__(self):
         """Initialize internal buffers and near-white masks.
@@ -319,4 +322,3 @@ if __name__=="__main__":
     print(c.BasicMain())
     c.Credits()
     c.Help()
-
