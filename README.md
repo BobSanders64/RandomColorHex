@@ -128,6 +128,11 @@ import random_color_hex as RCH
 color=RCH.main(SuperLightColorsAllowed=False, SuperDarkColorsAllowed=False)
 ```
 
+### IF YOUR IN A JUPYTER NOTEBOOK OR VIRTUAL ENVIRONMENT, MAKE SURE TO RUN THE IMPORT LINE LIKE THIS:
+```python
+import random_color_hex as RCH; RCH.JupyterReset()
+```
+Everything else is the same.
 ---
 
 ## Other Useful Functions
