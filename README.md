@@ -47,7 +47,7 @@ Each line gets its own random color
 
 ## The Cool Part: Smart Color Separation
 
-This library is special in that it uses Gaurav Sharma's 2001 paper CIEDE2000 to calculate the distance between colors actually ***looks*** different versus just being a random color. (See below for continued discussion on this topic)
+This library is special in that it uses Gaurav Sharma's 2001 paper CIEDE2000 to calculate the distance between colors actually ***looks*** different instead of just being mathmatically different. Many versions of RGB generators do the latter, being separated by only some arbitrary number between colors: if they have smart color separation at all. (See below for continued discussion on this topic)
 
 ```python
 import random_color_hex as RCH
@@ -68,7 +68,7 @@ This is perfect when you need multiple colors that won't blend together
 
 ---
 
-For most people, this will be enough no problems. However, for individuals who are using dozens of colors in one run of a program, trying to get colors that are distinct becomes less relevant than getting colors out. This also has a backup to allow for standard RGB generation. This ensures that the program never gets stuck trying to generate a "unique" color forever if you really just want 50000 colors.
+For most people, this will be enough no problems. However, for individuals who are using dozens of colors in one run of a program, trying to get colors that are distinct becomes less relevant than getting colors out. This library also has a backup to allow for standard RGB generation. The program will never gets stuck trying to generate a "unique" color forever if you really just want 50000 colors.
 
 If the program gets stuck, it will let you know and request you lower your separation. If you don't, it will assume you want just a high amount of colors and will generate them with no separation. No human interaction is required for this!
 
