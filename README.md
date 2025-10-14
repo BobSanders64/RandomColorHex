@@ -2,9 +2,9 @@
 
 Have you ever thought to yourself, "man, I really wish I could make this plot a random color so debugging is less boring"?
 
-Or maybe: "I need 20 different colors for my chart but I don't want them to look too similar"
+Alternatively, "I need 20 different colors for my chart, but I don't want them to look too similar."
 
-Well congratulations, you've just found the package for that. Just simply do:
+Congratulations! You've just located the right package/library! Just do:
 
 ```python
 import random_color_hex as RCH
@@ -47,7 +47,7 @@ Each line gets its own random color
 
 ## The Cool Part: Smart Color Separation
 
-Here's where it gets interesting - this library can make sure your colors are actually different from each other:
+This library is special in that it uses Gaurav Sharma's 2001 paper CIEDE2000 to calculate the distance between colors actually ***looks*** different versus just being a random color. (See below for continued discussion on this topic)
 
 ```python
 import random_color_hex as RCH
@@ -59,14 +59,20 @@ color3=RCH.main(HowDifferentShouldColorsBe='L')  # Different from both
 ```
 
 The `HowDifferentShouldColorsBe` parameter controls the minimum distance between colors:
-- `'s'` (small) - Slightly different (default)
-- `'m'` (medium) - Clearly different  
+- `'s'` (small) - Slightly different
+- `'m'` (medium) - Clearly different (default)
 - `'l'` (large) - Very different
 - `'sl'` (super large) - Extremely different
 
 This is perfect when you need multiple colors that won't blend together
 
 ---
+
+For most people, this will be enough no problems. However, for individuals who are using dozens of colors in one run of a program, trying to get colors that are distinct becomes less relevant than getting colors out. This also has a backup to allow for standard RGB generation. This ensures that the program never gets stuck trying to generate a "unique" color forever if you really just want 50000 colors.
+
+If the program gets stuck, it will let you know and request you lower your separation. If you don't, it will assume you want just a high amount of colors and will generate them with no separation. No human interaction is required for this!
+
+Each color is generated using the secrets module as well, meaning the colors are near true random.
 
 ## Install
 
@@ -124,7 +130,7 @@ color=RCH.main(SuperLightColorsAllowed=False, SuperDarkColorsAllowed=False)
 
 ---
 
-## Advanced Usage
+## Other Useful Functions
 
 ### Instance-Based Generation (Stateful)
 
@@ -153,7 +159,7 @@ color=RCH.BasicMain()  # Fast, simple, no distance checking
 
 ## Real-World Examples
 
-### Example 1: Multi-Line Plot with Distinct Colors
+### Example 1: Multi-Line Plot with Super Distinct Colors
 
 ```python
 import matplotlib.pyplot as plt
@@ -164,13 +170,13 @@ import numpy as np
 x=np.linspace(0, 10, 100)
 
 # Plot with guaranteed distinct colors using direct call
-plt.plot(x, np.sin(x), color=RCH.main(HowDifferentShouldColorsBe='L'), label='sin(x)')
-plt.plot(x, np.cos(x), color=RCH.main(HowDifferentShouldColorsBe='L'), label='cos(x)')
-plt.plot(x, np.sin(2*x), color=RCH.main(HowDifferentShouldColorsBe='L'), label='sin(2x)')
-plt.plot(x, np.cos(2*x), color=RCH.main(HowDifferentShouldColorsBe='L'), label='cos(2x)')
+plt.plot(x, np.sin(x), color=RCH.main(HowDifferentShouldColorsBe='SL'), label='sin(x)')
+plt.plot(x, np.cos(x), color=RCH.main(HowDifferentShouldColorsBe='SL'), label='cos(x)')
+plt.plot(x, np.sin(2*x), color=RCH.main(HowDifferentShouldColorsBe='SL'), label='sin(2x)')
+plt.plot(x, np.cos(2*x), color=RCH.main(HowDifferentShouldColorsBe='SL'), label='cos(2x)')
 
 plt.legend()
-plt.title("Trig Functions with Distinct Colors")
+plt.title("Trig Functions with Super Distinct Colors")
 plt.show()
 ```
 
@@ -180,8 +186,8 @@ plt.show()
 import matplotlib.pyplot as plt
 import random_color_hex as RCH
 
-categories=['Python', 'JavaScript', 'Java', 'C++', 'Ruby']
-values=[85, 70, 65, 50, 45]
+categories=['Python', 'JavaScript', 'Java', 'C++', 'Kotlin']
+values=[100, -20, 65, 90, 45]
 
 # Direct usage in bar chart - each bar gets a unique color
 for i, (cat, val) in enumerate(zip(categories, values)):
@@ -189,6 +195,8 @@ for i, (cat, val) in enumerate(zip(categories, values)):
 
 plt.title("Programming Language Popularity")
 plt.ylabel("Score")
+plt.xlabel("Language")
+plt.xticks(rotation=39)
 plt.show()
 ```
 
@@ -251,20 +259,18 @@ Excludes:
 - Near-white colors (like #FFFFFF, #FEFEFE)
 - Light pastels (like light pink #FFB0B0, light blue #B0B0FF)
 - Light grays and neutral tones
-- Any color where all RGB channels are high
 
 ### SuperDarkColorsAllowed=False
 Excludes:
 - Near-black colors (like #000000, #0A0A0A)
 - Very dark shades
-- Colors where all RGB channels are very low
 
 ### HowDifferentShouldColorsBe
-Uses Euclidean distance in RGB space to ensure colors are separated:
-- `'s'`: ~10 units apart (subtle difference, can generate ~8400 colors)
-- `'m'`: ~25 units apart (clear difference, can generate ~770 colors)
-- `'l'`: ~40 units apart (strong difference, can generate ~220 colors)
-- `'sl'`: ~80 units apart (maximum contrast, can generate ~36 colors)
+Uses CIEDE2000 (ΔE00) perceptual distance to ensure colors are separated:
+- `'s'`: ~10 units apart (subtle difference, can generate ~663 colors)
+- `'m'`: ~25 units apart (clear difference, can generate ~68 colors)
+- `'l'`: ~30 units apart (strong difference, can generate ~40 colors)
+- `'sl'`: ~40 units apart (maximum contrast, can generate ~23 colors)
 
 **Note:** The algorithm will keep searching for valid colors, but generation slows down as you approach these limits
 
@@ -273,14 +279,15 @@ Uses Euclidean distance in RGB space to ensure colors are separated:
 ## Technical Notes
 
 * **Zero deps:** stdlib-only; uses `secrets` for cryptographically random colors
-* **OS:** Works on Windows/macOS/Linux - if it can run Python 3.11, this can run
-* **Python:** >=3.11.0 (uses match/case statements)
+* **OS:** Works on Windows/macOS/Linux/Raspberry Pi/z OS - if it can run Python 3.11, this can run.
+* **Python:** >=3.11.0
 * **Algorithm:** Smart RGB distance checking to ensure color separation
 * **Performance:** Fast for reasonable numbers of colors. Maximum practical limits:
-  - Small distance ('s'): ~8400 colors
-  - Medium distance ('m'): ~770 colors  
-  - Large distance ('l'): ~220 colors
-  - Super large distance ('sl'): ~36 colors
+  - Small distance ('s'): ~663 colors
+  - Medium distance ('m'): ~68 colors
+  - Large distance ('l'): ~40 colors
+  - Super large distance ('sl'): ~23 colors
+  - After the program runs, and you plot your colors, the colors saved are reset.
 * **Thread-safe:** Uses `secrets` module for random generation
 * **License:** Unlicense (public domain) - Do whatever you want
 
@@ -307,15 +314,14 @@ Uses Euclidean distance in RGB space to ensure colors are separated:
 ### Parameters
 - `SuperLightColorsAllowed` (bool): Allow near-white/pastel colors (default: True)
 - `SuperDarkColorsAllowed` (bool): Allow near-black colors (default: True)  
-- `HowDifferentShouldColorsBe` (str): Color separation ['s', 'm', 'l', 'sl'] (default: 's')
+- `HowDifferentShouldColorsBe` (str): Color separation ['s', 'm', 'l', 'sl'] (default: 'm')
 
 ---
 
 ## Fun Facts
 
-- The library uses cryptographic randomness (`secrets` module) - your colors are unpredictable
 - The color separation algorithm runs in real-time, continuously generating until it finds a suitable color
-- With maximum separation ('sl'), you're essentially creating a maximally diverse color palette
+- With any setting at its max, you're essentially creating a maximally diverse color palette
 ---
 
 ## Links
@@ -323,6 +329,7 @@ Uses Euclidean distance in RGB space to ensure colors are separated:
 * **PyPI:** [https://pypi.org/project/random-color-hex/](https://pypi.org/project/random-color-hex/)
 * **Source:** [https://github.com/BobSanders64/RandomColorHex](https://github.com/BobSanders64/RandomColorHex)
 * **Author:** Nathan Honn (randomhexman@gmail.com)
+
 ---
 
 Enjoy your daily dose of randomness
