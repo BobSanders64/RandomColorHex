@@ -6,7 +6,7 @@ long_description=README.read_text(encoding="utf-8")
 
 setup(
     name="random_color_hex",
-    version="2.1",
+    version="2.1.2",
     author="Nathan Honn",
     author_email="randomhexman@gmail.com",
     description="Generate random CSS-style hex colors",
@@ -50,3 +50,4 @@ setup(
     ],
     python_requires=">=3.11.0",
 )
+
