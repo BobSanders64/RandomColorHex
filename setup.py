@@ -6,7 +6,7 @@ long_description=README.read_text(encoding="utf-8")
 
 setup(
     name="random_color_hex",
-    version="2.0.4",
+    version="2.1",
     author="Nathan Honn",
     author_email="randomhexman@gmail.com",
     description="Generate random CSS-style hex colors",
@@ -22,6 +22,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "License :: OSI Approved :: The Unlicense (Unlicense)",
         "Operating System :: OS Independent",
 
@@ -49,6 +50,3 @@ setup(
     ],
     python_requires=">=3.11.0",
 )
-
-
-
