@@ -4,6 +4,8 @@ Will output a random hex code, CSS style 6 digit "RRGGBB" format.
 
 import secrets
 import time as tym
+import atexit
+from ColorCalculus import DeepColorMath
 
 class RandomColorHex:
     """Stateful random color generator.
@@ -22,29 +24,21 @@ class RandomColorHex:
     """
     AllTheColors=[]
     EpochCount={'S':0,'M':0,'L':0,'SL':0}
-    EpochSize={'S':8400,'M':770,'L':220,'SL':36}
+    EpochSize={'S':663,'M':68,'L':40,'SL':23}
+    _auto_reset_registered=False
 
     @classmethod
-    def reset(cls):
+    def _reset(cls):
         """Clear class-level state that tracks previously used colors."""
         cls.AllTheColors.clear()
+        cls.EpochCount={'S':0,'M':0,'L':0,'SL':0}
 
     @classmethod
-    def _preflight_cycle_reset(cls):
-        """Reset rules:
-        - If CycleResetInt is odd ⇒ reset before doing anything.
-        - If CycleResetInt == 10 ⇒ reset and wrap to 0 before doing anything.
-        """
-        if cls.CycleResetInt == 10:
-            cls.reset()
-            cls.CycleResetInt = 0  # wrap
-        elif cls.CycleResetInt % 2 == 1:
-            cls.reset()
-
-    @classmethod
-    def _bump_cycle(cls):
-        """Advance 0→1→…→10→0."""
-        cls.CycleResetInt = (cls.CycleResetInt + 1) % 11
+    def _register_auto_reset(cls):
+        """Register automatic reset on program exit."""
+        if not cls._auto_reset_registered:
+            atexit.register(cls._reset)
+            cls._auto_reset_registered=True
 
     def __init__(self):
         """Initialize internal buffers and near-white masks.
@@ -58,6 +52,8 @@ class RandomColorHex:
         """
         self.RandomHexCode=[] #So you can access the code later for any instance
         self.NearWhiteMasks=['FHFHFH','FXFXFX','FHFHFX','XFHFHF','EHFHFH','HHHHHH']  #neutral, warm, cool, very light gray
+        self._register_auto_reset()
+        self.MassProduction=False
 
     def MatchesMask(self, hex6, mask):
         """Return True if the 6-char hex string matches a mask.
@@ -101,6 +97,8 @@ class RandomColorHex:
         Uses Euclidean distance in RGB space between the candidate color and
         all entries in `self.AllTheColors`. If any distance ≤ `MetricBar`, the
         color is considered “too close”.
+
+        OUTDATED, USE ONLY FOR BASICMAIN
         """
         R1=int(InputColor[0:2],16)
         G1=int(InputColor[2:4],16)
@@ -112,6 +110,16 @@ class RandomColorHex:
             #Euclidean distance in RGB
             d=((R1-R2)**2+(G1-G2)**2+(B1-B2)**2)**0.5
             if d<=MetricBar:
+                return True
+        return False
+
+    def AreColorsClosePerceptual(self, InputColor, threshold):
+        """Return True if `InputColor` is within perceptual `threshold` of any prior color.
+
+        Uses CIEDE2000 perceptual distance from ColorCalculus.
+        """
+        for prev in self.AllTheColors:
+            if DeepColorMath.ciede2000(InputColor, prev) < threshold:
                 return True
         return False
 
@@ -204,16 +212,16 @@ class RandomColorHex:
         RandomColorHex.EpochCount['S']+=1
         return out
 
-    def main(self, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True,HowDifferentShouldColorsBe='s'):
+    def main(self, SuperLightColorsAllowed=True, SuperDarkColorsAllowed=True,HowDifferentShouldColorsBe='m'):
         match HowDifferentShouldColorsBe:
             case 'M'|'m':
-                MetricBar=25; mode='M'
+                mode='M'; PerceptualThreshold=25
             case 'S'|'s':
-                MetricBar=10; mode='S'
+                mode='S'; PerceptualThreshold=10
             case "L"|"l":
-                MetricBar=40; mode='L'
+                mode='L'; PerceptualThreshold=30
             case "SL"|"sl"|"sL"|"Sl":
-                MetricBar=80; mode='SL'
+                mode='SL'; PerceptualThreshold=40
             case _:
                 raise ValueError('Invalid HowDifferentShouldColorsBe parameter! Please type "s" (small), "m" (medium), "l" (large), or "sl" (super large).')
         if RandomColorHex.EpochCount[mode]>=RandomColorHex.EpochSize[mode]:
@@ -228,20 +236,30 @@ class RandomColorHex:
                     "Note! It seems you're generating a lot of colors. The algorithm will keep searching, "
                     "but it's going to take a while!\n"
                     "This may be because the distance metric is too large (HowDifferentShouldColorsBe).\n"
-                    "Generally, anything over 220 colors with L set up starts having trouble.\n"
-                    "Super Large starts having trouble at 36\n"
-                    "Small can do ~8400\n"
-                    "Medium can do ~770\n"
+                    "Generally, anything over 40 colors with L set up starts having trouble.\n"
+                    "Super Large starts having trouble at 23\n"
+                    "Small can do ~663\n"
+                    "Medium can do ~68\n"
                     "For quicker results, please use either BasicMain() or HowDifferentShouldColorsBe='S' or 'M'."
                 )
                 OneNotice=False
+
+            if (tym.time()-start)>80 or self.MassProduction:
+                self.MassProduction=True
+                print("Timeout reached (80 seconds). Switching to BasicMain mode for remaining colors.")
+                #Generate color without distance checking
+                return self.BasicMain(SuperLightColorsAllowed=SuperLightColorsAllowed, SuperDarkColorsAllowed=SuperDarkColorsAllowed)
+
             OutputtedString=''.join(self.RandomHexCode)
             if not SuperLightColorsAllowed and self.IsNearWhite(OutputtedString):
-                self.RandomHex(); continue
+                self.RandomHex()
+                continue
             if not SuperDarkColorsAllowed and self.IsNearBlack(OutputtedString):
-                self.RandomHex(); continue
-            if self.AreColorsClose(OutputtedString, MetricBar):
-                self.RandomHex(); continue
+                self.RandomHex()
+                continue
+            if self.AreColorsClosePerceptual(OutputtedString, PerceptualThreshold):
+                self.RandomHex()
+                continue
             break
         self.AllTheColors.append(''.join(self.RandomHexCode))
         self.RandomHexCode.insert(0,'#')
@@ -295,6 +313,8 @@ if __name__=="__main__":
     c=RandomColorHex()
     print(c.main())
     print(c.main(SuperLightColorsAllowed=False, SuperDarkColorsAllowed=False, HowDifferentShouldColorsBe='m'))
+    for index in range(5000):
+        print(f"{index}, {c.main(HowDifferentShouldColorsBe='m')}")
     print(c.BasicMain())
     c.Credits()
     c.Help()
