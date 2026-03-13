@@ -1,0 +1,35 @@
+[MASTER]
+ignore-patterns=^build/|^dist/|^\.eggs/|^\.venv/|^venv/|^\.tox/
+load-plugins=
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    invalid-name,
+    too-many-arguments,
+    too-many-instance-attributes,
+    consider-using-f-string,
+    logging-fstring-interpolation,
+    fixme,
+    multiple-statements,
+    line-too-long
+
+[REPORTS]
+score = no
+
+[FORMAT]
+max-line-length = 160
+
+[BASIC]
+good-names = _,i,j,x,y,r,g,b,R1,G1,B1,R2,G2,B2,RC
+
+[DESIGN]
+max-args = 8
+max-branches = 15
+max-locals = 25
+
+[SIMILARITIES]
+min-similarity-lines = 6

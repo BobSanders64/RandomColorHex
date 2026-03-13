@@ -1,0 +1,14 @@
+# IDE
+.idea/
+
+# Virtual environments
+.venv/
+.venv-build/
+.venv-test/
+
+# Build artifacts
+dist/
+*.egg-info/
+random_color_hex.egg-info/
+__pycache__/
+*.pyc

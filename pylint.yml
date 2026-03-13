@@ -1,0 +1,42 @@
+name: Pylint
+on: [push, pull_request]
+
+jobs:
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            setup.py
+            pyproject.toml
+            requirements*.txt
+
+      - name: Install package and dev tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -e .
+          python -m pip install "pylint>=3.2,<4"
+
+      # Use bash so command substitution works on all OS runners
+      - name: Lint with pylint
+        shell: bash
+        run: |
+          set -eo pipefail
+          files="$(git ls-files '*.py')"
+          if [ -z "$files" ]; then
+            echo "No Python files to lint."
+          else
+            pylint --rcfile=.pylintrc $files
+          fi
