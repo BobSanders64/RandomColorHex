@@ -21,7 +21,7 @@ pip install random-color-hex
 import random_color_hex as RCH
 import matplotlib.pyplot as plt
 
-x=np.linspace(0,10,41)
+x=list(range(1,10))
 y1=[x**3-1 for x in x]; y2=[x**2-2 for x in x]; y3=[x-3 for x in x]
 
 # Multiple distinct colors
@@ -29,7 +29,7 @@ y1=[x**3-1 for x in x]; y2=[x**2-2 for x in x]; y3=[x-3 for x in x]
 plt.plot(x, y1, color=RCH.main(how_different_should_colors_be='L'))
 plt.plot(x, y2, color=RCH.main(how_different_should_colors_be='L'))
 plt.plot(x, y3, color=RCH.main(how_different_should_colors_be='L'))
-plt.title("x equations")
+plt.title("X Equations")
 plt.show()
 ```
 It will automatically separate the colors!
