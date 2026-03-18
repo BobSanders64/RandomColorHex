@@ -21,7 +21,7 @@ pip install random-color-hex
 import random_color_hex as RCH
 import matplotlib.pyplot as plt
 
-x=list(range(1,10))
+x=list(range(1,13))
 y1=[x**3-1 for x in x]; y2=[x**2-2 for x in x]; y3=[x-3 for x in x]
 
 # Multiple distinct colors
