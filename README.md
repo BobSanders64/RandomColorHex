@@ -25,7 +25,9 @@ x=list(range(1,13))
 y1=[x**3-1 for x in x]; y2=[x**2-2 for x in x]; y3=[x-3 for x in x]
 
 # Multiple distinct colors
-# All parameters (how_different_should_colors_be) are optional
+"""
+All parameters (like how_different_should_colors_be) are optional
+"""
 plt.plot(x, y1, color=RCH.main(how_different_should_colors_be='L'))
 plt.plot(x, y2, color=RCH.main(how_different_should_colors_be='L'))
 plt.plot(x, y3, color=RCH.main(how_different_should_colors_be='L'))
