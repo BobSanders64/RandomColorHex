@@ -22,11 +22,14 @@ import random_color_hex as RCH
 import matplotlib.pyplot as plt
 
 x=list(range(1,13))
-y1=[x**3-1 for x in x]; y2=[x**2-2 for x in x]; y3=[x-3 for x in x]
+y1=[x**3-1 for x in x]
+y2=[x**2-2 for x in x]
+y3=[x-3 for x in x]
 
 # Multiple distinct colors
 """
-All parameters (like how_different_should_colors_be) are optional, only RCH.main() is required to make a color.
+All parameters (like how_different_should_colors_be) are optional,
+only RCH.main() is required to make a color.
 """
 plt.plot(x, y1, color=RCH.main(how_different_should_colors_be='L'))
 plt.plot(x, y2, color=RCH.main(how_different_should_colors_be='L'))
