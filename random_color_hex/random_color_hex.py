@@ -238,8 +238,8 @@ class RandomColorHex:
         import random_color_hex as RCH
 
         numbers=list(range(-6,7))
-        line1=[x**2 for x in Numbers]
-        line2=[x**3 for x in Numbers]
+        line1=[x**2 for x in numbers]
+        line2=[x**3 for x in numbers]
 
         #For a one off random color:
         color_of_line1=RCH.basic_main()
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     print(c.main())
     print(c.main(super_light_colors_allowed=False, super_dark_colors_allowed=False, how_different_should_colors_be='m'))
     for index in range(5000):
-        print(f"{index}, {c.main(how_different_should_colors_be='m',kH=.2)}")
+        print(f"{index}, {c.main(how_different_should_colors_be='s',kH=.2)}")
     print(c.basic_main())
     c.credits()
     c.help()
