@@ -1,4 +1,4 @@
-﻿# random_color_hex
+# random_color_hex
 
 A random color generator that produces visually distinct colors, unlike most libraries that rely on arbitrary gradient RGB separation.
 
@@ -27,19 +27,26 @@ y2=[x**2-2 for x in x]
 y3=[x-3 for x in x]
 
 # Multiple distinct colors
-"""
-All parameters (like how_different_should_colors_be) are optional,
-only RCH.main() is required to make a color.
-"""
-plt.plot(x, y1, color=RCH.main(how_different_should_colors_be='L'))
-plt.plot(x, y2, color=RCH.main(how_different_should_colors_be='L'))
-plt.plot(x, y3, color=RCH.main(how_different_should_colors_be='L'))
+
+plt.plot(x, y1, color=RCH.main())
+plt.plot(x, y2, color=RCH.main())
+plt.plot(x, y3, color=RCH.main())
 plt.title("X Equations")
 plt.show()
 ```
 It will automatically separate the colors!
 
 ***Using color=RCH.main(), as integrated into the plot function, is the intended use. You can make it a variable by "Variable=RCH.main()", but its designed for easy integration with matplotlib (color=RCH.main()).***
+
+To adjust how different the colors are, simply do:
+```python
+"""
+All parameters (like how_different_should_colors_be) are optional,
+only RCH.main() is required to make a color.
+"""
+plt.plot(x, y1, color=RCH.main(how_different_should_colors_be='L'))
+plt.plot(x, y2, color=RCH.main(how_different_should_colors_be='L'))
+```
 
 ### Jupyter/Non Local Usage:
 ```python
@@ -63,7 +70,7 @@ This generates a random color via RGB which is not separated. This is only put i
 Uses CIEDE2000 algorithm to ensure colors are **visually** distinct, not just mathematically different.
 
 ```python
-# Control color separation
+# Control color separation, as shown earlier
 how_different_should_colors_be='s'   # Slight difference (~975 colors)
 how_different_should_colors_be='m'   # Clear difference (~99 colors, default)
 how_different_should_colors_be='l'   # Very different (~51 colors)
