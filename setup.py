@@ -6,7 +6,7 @@ long_description=README.read_text(encoding="utf-8")
 
 setup(
     name="random_color_hex",
-    version="3.0.4",
+    version="3.0.5",
     author="Nathan Honn",
     author_email="randomhexman@gmail.com",
     description="The visually distinct, smartly separated, random color generator.",
